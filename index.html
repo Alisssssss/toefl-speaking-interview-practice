@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Practice (Offline)</title>
+    <!-- Load External Data -->
+    <script src="Interview_Data.js"></script>
+    <style>
+        /* --- CSS Reset & Base Styles --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* --- Utility Classes --- */
+        .hidden { display: none !important; }
+        .card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 40px -5px rgba(0, 0, 0, 0.1), 0 8px 16px -6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            /* BIGGER UI: Increased max-width for classroom visibility */
+            max-width: 1000px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 20px 32px; /* Bigger padding */
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 24px; /* Bigger font */
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .btn-primary { background-color: #2563eb; color: white; }
+        .btn-primary:hover { background-color: #1d4ed8; transform: translateY(-2px); }
+        .btn-secondary { background-color: white; border: 3px solid #e5e7eb; color: #374151; }
+        .btn-secondary:hover { background-color: #f9fafb; }
+        .btn-sm { padding: 12px 24px; font-size: 18px; width: auto; }
+        
+        /* --- Views --- */
+        .view-content { padding: 48px; text-align: center; flex: 1; } 
+
+        /* Home View */
+        .icon-circle {
+            width: 96px; height: 96px; /* Bigger icon */
+            background-color: #dbeafe;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 32px;
+            color: #2563eb;
+        }
+        .icon-circle svg { width: 48px; height: 48px; }
+
+        h1 { margin-bottom: 16px; font-size: 42px; font-weight: 800; }
+        p { font-size: 22px; line-height: 1.6; }
+        h2 { font-size: 32px; font-weight: 700; }
+
+        /* List View */
+        .set-list-container {
+            max-height: 60vh;
+            overflow-y: auto;
+            text-align: left;
+            margin: 20px 0;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+        }
+        .set-item {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .set-item:hover { background-color: #eff6ff; }
+        .set-item:last-child { border-bottom: none; }
+        .set-id { font-weight: bold; color: #2563eb; font-size: 20px; margin-right: 16px; }
+        .set-topic { font-size: 18px; color: #374151; }
+
+        /* Instruction View */
+        .header-bar {
+            background-color: #4f46e5;
+            color: white;
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 24px;
+        }
+        .img-container {
+            width: 280px; height: 210px; /* Rectangular aspect ratio */
+            margin: 0 auto 32px;
+            border-radius: 16px; /* Rounded corners */
+            overflow: hidden;
+            border: 6px solid #e0e7ff;
+            background: #eee;
+        }
+        .img-container img { width: 100%; height: 100%; object-fit: cover; }
+        .instruction-box {
+            background-color: #eff6ff;
+            border-left: 8px solid #3b82f6;
+            padding: 32px;
+            text-align: left;
+            margin-bottom: 40px;
+            color: #1e40af;
+            font-size: 24px; 
+            line-height: 1.6;
+        }
+
+        /* Clickable image effects */
+        .img-container, .interviewer-avatar {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .img-container:hover {
+            border-color: #2563eb;
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.15);
+            cursor: pointer;
+        }
+        .interviewer-avatar:hover {
+            border-color: #2563eb;
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.15);
+        }
+
+        /* Interview View layout with arrows */
+        .progress-bar-container { display: flex; height: 16px; width: 100%; background: #e5e7eb; }
+        .progress-segment { flex: 1; border-right: 2px solid white; transition: background 0.3s; }
+        .progress-done { background-color: #22c55e; }
+        .progress-current { background-color: #3b82f6; }
+        
+        .interviewer-avatar {
+            width: 320px; height: 240px; /* RECTANGULAR & Bigger */
+            border-radius: 16px; /* Soft edges, not circle */
+            overflow: hidden;
+            border: 6px solid #e5e7eb;
+            transition: all 0.3s;
+            background: #f3f4f6;
+        }
+        .speaking {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 8px #bfdbfe;
+            transform: scale(1.02);
+        }
+
+        /* Practice mode navigation arrows */
+        .nav-arrow-btn {
+            background-color: #f3f4f6;
+            border: 3px solid #e5e7eb;
+            color: #4b5563;
+            border-radius: 50%;
+            width: 64px;
+            height: 64px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .nav-arrow-btn:hover:not(:disabled) {
+            background-color: #2563eb;
+            border-color: #2563eb;
+            color: white;
+            transform: scale(1.1);
+        }
+        .nav-arrow-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Timer - SMALLER now */
+        .timer-container {
+            position: relative;
+            width: 100px; height: 100px; /* Smaller Timer */
+            margin: 20px auto;
+        }
+        .timer-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+        .timer-circle-bg { fill: none; stroke: #e5e7eb; stroke-width: 8; }
+        .timer-circle-fg { 
+            fill: none; stroke: #ef4444; stroke-width: 8; 
+            stroke-dasharray: 251; /* 2 * PI * 40 (r=40 roughly) */
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 1s linear;
+        }
+        .timer-text {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px; /* Smaller Text */
+            font-weight: bold;
+            color: #374151;
+        }
+        
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 12px;
+            padding: 8px 20px;
+            border-radius: 99px;
+            font-weight: bold;
+            font-size: 18px; 
+            margin-top: 16px;
+        }
+        .status-listening { color: #2563eb; background: #eff6ff; }
+        .status-speaking { color: #dc2626; background: #fef2f2; animation: pulse 2s infinite; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* Fallback for missing audio */
+        .manual-play {
+            margin-top: 16px;
+            font-size: 18px;
+            color: #2563eb;
+            text-decoration: underline;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+        
+        /* Error Text */
+        .error-text {
+            color: #ef4444;
+            font-size: 16px;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HOME VIEW -->
+    <div id="view-home" class="card">
+        <div class="view-content">
+            <div class="icon-circle">
+                <!-- Mic Icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+            </div>
+            <h1>Interview Practice</h1>
+            <p style="color: #6b7280; margin-bottom: 40px;">
+                Simulate a real research interview.<br>
+                <span style="font-size: 18px;">(4 questions, 45s response each with local recording)</span>
+            </p>
+            
+            <button class="btn btn-primary" onclick="app.startRandomSet()">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="M8 15h8"/></svg>
+                Random Practice (Simulation)
+            </button>
+            <button class="btn btn-secondary" onclick="app.showSetList()">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                View All Sets (Practice Mode)
+            </button>
+
+            <div style="margin-top: 32px; padding: 16px; background: #f9fafb; border-radius: 12px; font-size: 16px; color: #6b7280; text-align: left;">
+                <strong>Local Setup:</strong> Ensure "Audio" and "pic" folders are in the same directory as this file. <br>
+                Data loaded from: <code>Interview_Data.js</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIST VIEW -->
+    <div id="view-list" class="card hidden">
+        <div class="header-bar">
+            <span>Select a Set</span>
+            <div style="cursor: pointer;" onclick="app.goHome()">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+        </div>
+        <div class="view-content" style="padding-top: 20px;">
+            <p style="font-size: 18px; color: #6b7280; margin-bottom: 20px;">Select a set to practice with redo options allowed.</p>
+            <div id="set-list" class="set-list-container">
+                <!-- Items injected here -->
+            </div>
+            <button class="btn btn-secondary" onclick="app.goHome()">Back to Home</button>
+        </div>
+    </div>
+
+    <!-- INSTRUCTION VIEW -->
+    <div id="view-instruction" class="card hidden">
+        <div class="header-bar">
+            <span id="instruction-set-id">Set ID</span>
+            <div style="cursor: pointer;" onclick="app.goHome()">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+        </div>
+        <div class="view-content">
+            <div class="img-container" onclick="app.playInstructionAudio()">
+                <img id="instruction-img" src="" alt="Interviewer">
+            </div>
+            <p id="instruction-img-error" class="error-text hidden"></p>
+            
+            <h2 style="margin-bottom: 24px;">Instructions</h2>
+            <div class="instruction-box">
+                <p id="instruction-text">Loading...</p>
+                <p id="instruction-audio-error" class="error-text hidden" style="font-size: 16px; margin-top: 10px;"></p>
+            </div>
+            <button class="btn btn-primary" onclick="app.startInterview()">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                I Understand - Start
+            </button>
+        </div>
+    </div>
+
+    <!-- INTERVIEW VIEW -->
+    <div id="view-interview" class="card hidden">
+        <div class="progress-bar-container">
+            <div class="progress-segment" id="seg-0"></div>
+            <div class="progress-segment" id="seg-1"></div>
+            <div class="progress-segment" id="seg-2"></div>
+            <div class="progress-segment" id="seg-3"></div>
+        </div>
+        <div class="view-content">
+            
+            <!-- AVATAR CONTAINER ENVELOPED BY PRACTICE NAVIGATION ARROWS -->
+            <div style="display: flex; align-items: center; justify-content: center; gap: 40px; margin-bottom: 32px;">
+                <!-- Backward Arrow (Practice Mode only) -->
+                <button id="prev-question-btn" class="nav-arrow-btn hidden" onclick="app.prevQuestion()" title="Previous Question">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                
+                <!-- Main Avatar Container (Clickable to Replay Audio in Practice Mode) -->
+                <div id="interviewer-avatar" class="interviewer-avatar" onclick="app.playCurrentAudioFromAvatar()">
+                    <img id="interview-img-avatar" src="" style="width:100%; height:100%; object-fit:cover;" alt="Interviewer">
+                </div>
+                
+                <!-- Forward Arrow (Practice Mode only) -->
+                <button id="next-question-btn" class="nav-arrow-btn hidden" onclick="app.nextQuestionManual()" title="Next Question / Finish">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+            </div>
+            
+            <p id="interview-img-error" class="error-text hidden" style="margin-top: -16px; margin-bottom: 16px;"></p>
+            
+            <h2 id="question-tracker" style="margin-bottom: 16px;">Question 1 of 4</h2>
+            
+            <!-- Listening State UI -->
+            <div id="state-listening" class="hidden">
+                <div class="status-badge status-listening">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                    <span id="listening-text-label">Interviewer Speaking...</span>
+                </div>
+                <br>
+                <button id="manual-play-btn" class="manual-play hidden" onclick="app.retryAudio()">Tap to play audio</button>
+                <p id="audio-error-msg" class="error-text hidden"></p>
+            </div>
+
+            <!-- Speaking/Timer State UI -->
+            <div id="state-speaking" class="hidden">
+                <div class="timer-container">
+                    <svg class="timer-svg" viewBox="0 0 100 100">
+                        <circle class="timer-circle-bg" cx="50" cy="50" r="45"></circle>
+                        <circle id="timer-circle" class="timer-circle-fg" cx="50" cy="50" r="45"></circle>
+                    </svg>
+                    <div id="timer-text" class="timer-text">45</div>
+                </div>
+                <div class="status-badge status-speaking">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                    Your Turn - Recording...
+                </div>
+            </div>
+
+            <!-- PRACTICE MODE REVIEW & REDO STATE UI -->
+            <div id="state-review" class="hidden" style="margin-top: 24px; padding: 24px; background: #f0fdf4; border: 3px solid #bbf7d0; border-radius: 20px; text-align: left;">
+                <p style="font-size: 20px; font-weight: 800; color: #16a34a; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    Review your recording:
+                </p>
+                <audio id="review-player" controls style="width: 100%; margin-bottom: 20px; height: 54px;"></audio>
+                <div style="display: flex; gap: 16px; justify-content: flex-start; flex-wrap: wrap;">
+                    <button class="btn btn-secondary btn-sm" onclick="app.redoCurrent()" style="margin-bottom: 0; display: inline-flex; align-items: center;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                        Redo
+                    </button>
+                </div>
+            </div>
+
+        </div>
+        
+        <!-- FOOTER BAR WITH HOME BUTTON (LEFT SIDE) AND MODE TRACKER (CENTER) -->
+        <div style="background:#f9fafb; padding:16px 28px; display: flex; justify-content: space-between; align-items: center; border-top:1px solid #e5e7eb; min-height: 80px;">
+            <div>
+                <button class="btn btn-secondary btn-sm" onclick="app.confirmGoHome()" style="margin-bottom: 0; font-size: 16px; font-weight: 700; padding: 12px 20px; display: inline-flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Home
+                </button>
+            </div>
+            <div style="font-size:16px; color:#6b7280; font-weight: 500; text-align: center; flex: 1; padding: 0 16px;">
+                <span id="mode-text"></span>
+            </div>
+            <div style="width: 160px; text-align: right;">
+                <!-- Balanced spacer -->
+            </div>
+        </div>
+    </div>
+
+    <!-- FINISHED VIEW WITH RECORDINGS EXPORT -->
+    <div id="view-finished" class="card hidden">
+        <div class="view-content">
+            <div class="icon-circle" style="color: #16a34a; background-color: #dcfce7;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <h2 style="font-size: 42px; margin-bottom: 16px;">Great Job!</h2>
+            <p style="color: #6b7280; margin-bottom: 32px; font-size: 24px;">You have completed set <b id="finished-set-id">...</b></p>
+            
+            <!-- EXPORT RECORDINGS PORTLET (SIMULATION MODE ONLY) -->
+            <div id="finished-recordings-section" class="hidden" style="margin-bottom: 40px; text-align: left; background: #fafafa; border: 2px dashed #d1d5db; border-radius: 20px; padding: 24px;">
+                <h3 style="font-size: 24px; font-weight: 800; color: #111827; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Your Practice Recordings
+                </h3>
+                <div id="finished-recordings-list" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
+                    <!-- Dynamic audio players go here -->
+                </div>
+                <button class="btn btn-primary" onclick="app.downloadAllRecordings()" style="background-color: #059669; margin-bottom: 0;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Download All
+                </button>
+            </div>
+
+            <button class="btn btn-primary" onclick="app.startRandomSet()" style="margin-bottom: 16px;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+                Try Random Set
+            </button>
+            <button class="btn btn-secondary" onclick="app.goHome()">Back to Home</button>
+        </div>
+    </div>
+
+    <!-- Hidden Audio Element -->
+    <audio id="audio-player"></audio>
+
+    <script>
+        // --- Application Logic ---
+        
+        const app = {
+            data: [],
+            currentSet: null,
+            questionIndex: 0,
+            timerInterval: null,
+            mode: 'random', // 'random' or 'practice'
+            
+            // Recording Engine Variables
+            mediaStream: null,
+            mediaRecorder: null,
+            recordedBlobs: [null, null, null, null],
+            currentChunks: [],
+            isRecording: false,
+            
+            init: function() {
+                // Check if data loaded from data.js
+                if (window.INTERVIEW_DATA) {
+                    this.data = window.INTERVIEW_DATA;
+                } else {
+                    alert("Error: Interview_Data.js not found or invalid. Please ensure Interview_Data.js is in the same folder.");
+                    this.data = [{ id: 'S001', topic: 'Error Fallback', text: 'Data file missing.' }];
+                }
+            },
+
+            // Navigation and Reset
+            switchView: function(viewId) {
+                document.querySelectorAll('.card').forEach(el => el.classList.add('hidden'));
+                document.getElementById(viewId).classList.remove('hidden');
+                this.stopEverything();
+            },
+
+            goHome: function() {
+                this.switchView('view-home');
+            },
+
+            confirmGoHome: function() {
+                if (confirm("Are you sure you want to return to Home? Any unsaved recordings will be lost.")) {
+                    this.goHome();
+                }
+            },
+
+            // Ask for local recording permissions safely
+            requestMicPermission: async function() {
+                try {
+                    this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    return true;
+                } catch (err) {
+                    console.error("Microphone access denied:", err);
+                    alert("Microphone Access Error\n\nMicrophone access is required to record and play back your practice recordings.\n\nIf you are double-clicking to open this local HTML file directly (via the file:// protocol), your browser may block microphone usage due to strict security policies.\n\nSolutions:\n1. Open this local file inside Firefox (which typically allows microphone access on file:// URLs).\n2. Or, spin up a simple local Web Server in this directory.");
+                    return false;
+                }
+            },
+
+            // --- List Logic ---
+            showSetList: function() {
+                const listContainer = document.getElementById('set-list');
+                listContainer.innerHTML = '';
+                
+                this.data.forEach((set, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'set-item';
+                    div.innerHTML = `<span class="set-id">${set.id}</span> <span class="set-topic">${set.topic || 'Unknown Topic'}</span>`;
+                    div.onclick = () => {
+                        this.startSet(set, 'practice');
+                    };
+                    listContainer.appendChild(div);
+                });
+                
+                this.switchView('view-list');
+            },
+
+            // --- Start Logic ---
+            startRandomSet: function() {
+                const randomIndex = Math.floor(Math.random() * this.data.length);
+                this.startSet(this.data[randomIndex], 'random');
+            },
+
+            startSet: async function(set, mode) {
+                // Prioritize checking & requesting Mic permission
+                const granted = await this.requestMicPermission();
+                if (!granted) return;
+
+                this.currentSet = set;
+                this.mode = mode;
+                this.questionIndex = 0;
+                
+                // Reset recording cache
+                this.recordedBlobs = [null, null, null, null];
+                
+                // --- INSTRUCTION VIEW SETUP ---
+                document.getElementById('instruction-set-id').innerText = `Set: ${this.currentSet.id}`;
+                document.getElementById('instruction-text').innerText = this.currentSet.text;
+                
+                // Errors
+                document.getElementById('instruction-img-error').classList.add('hidden');
+                document.getElementById('instruction-audio-error').classList.add('hidden');
+                
+                // Image
+                const imgPath = 'pic/' + this.currentSet.id + '-Interview.png';
+                const imgEl = document.getElementById('instruction-img');
+                imgEl.src = imgPath;
+                imgEl.onerror = function() {
+                    this.src = 'https://placehold.co/320x240?text=No+Img';
+                    const errEl = document.getElementById('instruction-img-error');
+                    errEl.innerText = 'Missing: ' + imgPath;
+                    errEl.classList.remove('hidden');
+                };
+                
+                this.switchView('view-instruction');
+                
+                // Play Intro Audio
+                this.playInstructionAudio();
+            },
+
+            playInstructionAudio: function() {
+                // Reset errors and stop player cleanly
+                document.getElementById('instruction-audio-error').classList.add('hidden');
+                
+                const audioPath = 'Audio/' + this.currentSet.id + '-0.mp3';
+                const player = document.getElementById('audio-player');
+                player.src = audioPath;
+                
+                player.onerror = () => {
+                    document.getElementById('instruction-audio-error').innerText = 'Missing Intro Audio: ' + audioPath;
+                    document.getElementById('instruction-audio-error').classList.remove('hidden');
+                };
+
+                const playPromise = player.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => { console.log("Instruction Auto-play blocked"); });
+                }
+            },
+
+            startInterview: function() {
+                this.stopEverything();
+                this.switchView('view-interview');
+                
+                // Mode Specifics UI setup (Navigation Arrows & Tracker mode texts)
+                const prevBtn = document.getElementById('prev-question-btn');
+                const nextBtn = document.getElementById('next-question-btn');
+                const modeText = document.getElementById('mode-text');
+                const avatar = document.getElementById('interviewer-avatar');
+                
+                if (this.mode === 'practice') {
+                    prevBtn.classList.remove('hidden');
+                    nextBtn.classList.remove('hidden');
+                    modeText.innerText = ""; 
+                    this.updateArrowButtonsState();
+                    avatar.style.cursor = 'pointer';
+                } else {
+                    prevBtn.classList.add('hidden');
+                    nextBtn.classList.add('hidden');
+                    modeText.innerText = "";
+                    avatar.style.cursor = 'default';
+                }
+
+                // Hide potential review states
+                document.getElementById('state-review').classList.add('hidden');
+
+                // Image
+                const imgPath = 'pic/' + this.currentSet.id + '-Interview.png';
+                const imgEl = document.getElementById('interview-img-avatar');
+                document.getElementById('interview-img-error').classList.add('hidden');
+                
+                imgEl.src = imgPath;
+                imgEl.onerror = function() {
+                    this.src = 'https://placehold.co/320x240?text=No+Img';
+                    const errEl = document.getElementById('interview-img-error');
+                    errEl.innerText = 'Missing: ' + imgPath;
+                    errEl.classList.remove('hidden');
+                };
+
+                this.playQuestion(0);
+            },
+
+            // --- Interview Logic ---
+            
+            playQuestion: function(index) {
+                // Safety: halt previous recorders, timers, and active players before starting/transitioning Qs
+                this.stopEverything(); 
+
+                this.questionIndex = index;
+                this.updateProgressUI();
+                this.updateArrowButtonsState();
+                
+                // Hide review state
+                document.getElementById('state-review').classList.add('hidden');
+                
+                // State: Listening
+                document.getElementById('state-listening').classList.remove('hidden');
+                document.getElementById('state-speaking').classList.add('hidden');
+                document.getElementById('interviewer-avatar').classList.add('speaking');
+                document.getElementById('manual-play-btn').classList.add('hidden');
+                document.getElementById('audio-error-msg').classList.add('hidden');
+
+                const statusLabel = document.getElementById('listening-text-label');
+                statusLabel.innerText = "Interviewer Speaking...";
+
+                const audioPath = 'Audio/' + this.currentSet.id + '-' + (index + 1) + '.mp3';
+                const player = document.getElementById('audio-player');
+                player.src = audioPath;
+                
+                player.onerror = () => {
+                     document.getElementById('audio-error-msg').innerText = 'Missing Audio: ' + audioPath;
+                     document.getElementById('audio-error-msg').classList.remove('hidden');
+                };
+
+                const playPromise = player.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        if (!player.error) document.getElementById('manual-play-btn').classList.remove('hidden');
+                    });
+                }
+
+                player.onended = () => {
+                    this.startTimer();
+                };
+            },
+
+            playCurrentAudioFromAvatar: function() {
+                // Strictly do nothing in Simulation mode
+                if (this.mode !== 'practice') return;
+                
+                // Clear any running timers or active recordings before replaying question audio
+                this.stopEverything(); 
+                this.playQuestion(this.questionIndex);
+            },
+
+            retryAudio: function() {
+                document.getElementById('audio-player').play();
+                document.getElementById('manual-play-btn').classList.add('hidden');
+            },
+
+            startTimer: function() {
+                // State: Speaking
+                document.getElementById('state-listening').classList.add('hidden');
+                document.getElementById('state-speaking').classList.remove('hidden');
+                document.getElementById('interviewer-avatar').classList.remove('speaking');
+
+                let timeLeft = 45;
+                const totalTime = 45;
+                const timerText = document.getElementById('timer-text');
+                const timerCircle = document.getElementById('timer-circle');
+                const circumference = 251; 
+
+                timerText.innerText = timeLeft;
+                timerCircle.style.strokeDashoffset = 0;
+
+                // Fire microphone recording engine
+                this.startRecording();
+
+                this.timerInterval = setInterval(() => {
+                    timeLeft--;
+                    timerText.innerText = timeLeft;
+                    
+                    const offset = circumference - (timeLeft / totalTime) * circumference;
+                    timerCircle.style.strokeDashoffset = offset;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(this.timerInterval);
+                        this.stopRecording();
+                        
+                        if (this.mode === 'random') {
+                            this.nextStep();
+                        } else {
+                            // In practice mode, we show Review UI which is handled by onstop callback of MediaRecorder
+                        }
+                    }
+                }, 1000);
+            },
+
+            nextStep: function() {
+                document.getElementById('state-review').classList.add('hidden');
+                if (this.questionIndex < 3) {
+                    this.playQuestion(this.questionIndex + 1);
+                } else {
+                    this.finish();
+                }
+            },
+
+            // --- Navigation Arrow Actions (Practice Mode) ---
+            prevQuestion: function() {
+                if (this.questionIndex > 0) {
+                    this.playQuestion(this.questionIndex - 1);
+                }
+            },
+
+            nextQuestionManual: function() {
+                this.nextStep();
+            },
+
+            updateArrowButtonsState: function() {
+                if (this.mode !== 'practice') return;
+                const prevBtn = document.getElementById('prev-question-btn');
+                const nextBtn = document.getElementById('next-question-btn');
+                
+                if (prevBtn && nextBtn) {
+                    prevBtn.disabled = (this.questionIndex === 0);
+                    nextBtn.disabled = false; // Always allowed (leads to finish on last Q)
+                }
+            },
+
+            // --- Recording Engine Implementations ---
+            startRecording: function() {
+                if (!this.mediaStream) return;
+                this.currentChunks = [];
+                const recordedIndex = this.questionIndex; // Capture current question index to prevent async race condition
+
+                let options = { mimeType: 'audio/webm' };
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options = { mimeType: 'audio/ogg' };
+                }
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options = { mimeType: 'audio/mp4' };
+                }
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options = {}; // fallback
+                }
+
+                try {
+                    this.mediaRecorder = new MediaRecorder(this.mediaStream, options);
+                    this.mediaRecorder.ondataavailable = (e) => {
+                        if (e.data && e.data.size > 0) {
+                            this.currentChunks.push(e.data);
+                        }
+                    };
+
+                    this.mediaRecorder.onstop = () => {
+                        const blob = new Blob(this.currentChunks, { type: this.mediaRecorder.mimeType || 'audio/webm' });
+                        this.recordedBlobs[recordedIndex] = blob; // Use captured index instead of this.questionIndex
+
+                        // Trigger Review UI in Practice Mode
+                        if (this.mode === 'practice') {
+                            this.showReviewUI(blob);
+                        }
+                    };
+
+                    this.mediaRecorder.start();
+                    this.isRecording = true;
+                    console.log("Started recording answer " + (recordedIndex + 1));
+                } catch (e) {
+                    console.error("Recording init error: ", e);
+                }
+            },
+
+            stopRecording: function() {
+                if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+                    try {
+                        this.mediaRecorder.stop();
+                    } catch(e) {}
+                }
+                this.isRecording = false;
+            },
+
+            // Show Review Section in Practice Mode
+            showReviewUI: function(blob) {
+                document.getElementById('state-speaking').classList.add('hidden');
+                document.getElementById('state-listening').classList.add('hidden');
+                
+                const reviewDiv = document.getElementById('state-review');
+                reviewDiv.classList.remove('hidden');
+
+                const reviewPlayer = document.getElementById('review-player');
+                const url = URL.createObjectURL(blob);
+                reviewPlayer.src = url;
+            },
+
+            // --- Download Handling ---
+            sanitizeFilename: function(str) {
+                if (!str) return "Topic";
+                return str.trim().replace(/[\s\-\/\\:\*\?"<>\|]+/g, '_');
+            },
+
+            downloadRecording: function(index) {
+                const blob = this.recordedBlobs[index];
+                if (!blob) return;
+
+                const topicCleaned = this.sanitizeFilename(this.currentSet.topic || "Topic");
+                const filename = `${this.currentSet.id}-${topicCleaned}-Recording-${index + 1}.mp3`;
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            },
+
+            downloadAllRecordings: function() {
+                let downloadedAny = false;
+                for (let i = 0; i < 4; i++) {
+                    if (this.recordedBlobs[i]) {
+                        (function(idx) {
+                            setTimeout(() => {
+                                app.downloadRecording(idx);
+                            }, idx * 400); // Prevent browser download blocking
+                        })(i);
+                        downloadedAny = true;
+                    }
+                }
+                if (!downloadedAny) {
+                    alert("No recordings available for download.");
+                }
+            },
+
+            populateFinishedRecordings: function() {
+                const section = document.getElementById('finished-recordings-section');
+                const list = document.getElementById('finished-recordings-list');
+                list.innerHTML = '';
+                
+                let hasAny = false;
+                for (let i = 0; i < 4; i++) {
+                    const blob = this.recordedBlobs[i];
+                    if (blob) {
+                        hasAny = true;
+                        const item = document.createElement('div');
+                        item.style.display = 'flex';
+                        item.style.alignItems = 'center';
+                        item.style.justifyContent = 'space-between';
+                        item.style.padding = '16px';
+                        item.style.background = '#ffffff';
+                        item.style.border = '2px solid #e5e7eb';
+                        item.style.borderRadius = '12px';
+                        item.style.gap = '16px';
+                        item.style.boxShadow = '0 2px 4px rgba(0,0,0,0.02)';
+                        
+                        const topicCleaned = this.sanitizeFilename(this.currentSet.topic || "Topic");
+                        const filename = `${this.currentSet.id}-${topicCleaned}-Recording-${i + 1}.mp3`;
+                        
+                        const url = URL.createObjectURL(blob);
+                        
+                        item.innerHTML = `
+                            <div style="flex: 1;">
+                                <p style="font-size: 18px; font-weight: 800; color: #374151; word-break: break-all;">${filename}</p>
+                                <audio controls src="${url}" style="width: 100%; margin-top: 10px; height: 44px;"></audio>
+                            </div>
+                            <button class="btn btn-secondary btn-sm" onclick="app.downloadRecording(${i})" style="margin-bottom: 0; white-space: nowrap; padding: 12px 20px; display: inline-flex; align-items: center; gap: 6px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                Download
+                            </button>
+                        `;
+                        list.appendChild(item);
+                    }
+                }
+                
+                // Show the backup panel only in simulation (random) mode
+                if (hasAny && this.mode === 'random') {
+                    section.classList.remove('hidden');
+                } else {
+                    section.classList.add('hidden');
+                }
+            },
+
+            // --- Practice Control Helpers ---
+            redoCurrent: function() {
+                this.stopEverything(); // Halt timer and reset players
+                document.getElementById('state-review').classList.add('hidden');
+                this.recordedBlobs[this.questionIndex] = null; // Clear old blob
+                
+                // Directly start recording and countdown (without playing the question audio again)
+                this.startTimer();
+            },
+
+            finish: function() {
+                this.switchView('view-finished');
+                document.getElementById('finished-set-id').innerText = this.currentSet.id;
+                this.populateFinishedRecordings();
+            },
+
+            updateProgressUI: function() {
+                document.getElementById('question-tracker').innerText = `Question ${this.questionIndex + 1} of 4`;
+                for (let i = 0; i < 4; i++) {
+                    const seg = document.getElementById(`seg-${i}`);
+                    seg.className = 'progress-segment';
+                    if (i < this.questionIndex) seg.classList.add('progress-done');
+                    else if (i === this.questionIndex) seg.classList.add('progress-current');
+                }
+            },
+
+            stopEverything: function() {
+                clearInterval(this.timerInterval);
+                this.timerInterval = null;
+                const player = document.getElementById('audio-player');
+                player.pause();
+                player.currentTime = 0;
+                player.onended = null;
+                player.onerror = null;
+
+                // Stop recorder safely
+                this.stopRecording();
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+
+    </script>
+</body>
+</html>
