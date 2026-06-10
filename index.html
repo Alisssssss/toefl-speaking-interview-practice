@@ -759,8 +759,8 @@
             // --- Recording Engine Implementations ---
             startRecording: function() {
                 if (!this.mediaStream) return;
-                this.currentChunks = [];
                 const recordedIndex = this.questionIndex; // Capture current question index to prevent async race condition
+                const chunks = [];
 
                 let options = { mimeType: 'audio/webm' };
                 if (!MediaRecorder.isTypeSupported(options.mimeType)) {
@@ -774,24 +774,28 @@
                 }
 
                 try {
-                    this.mediaRecorder = new MediaRecorder(this.mediaStream, options);
-                    this.mediaRecorder.ondataavailable = (e) => {
+                    const recorder = new MediaRecorder(this.mediaStream, options);
+                    this.mediaRecorder = recorder;
+                    recorder.ondataavailable = (e) => {
                         if (e.data && e.data.size > 0) {
-                            this.currentChunks.push(e.data);
+                            chunks.push(e.data);
                         }
                     };
 
-                    this.mediaRecorder.onstop = () => {
-                        const blob = new Blob(this.currentChunks, { type: this.mediaRecorder.mimeType || 'audio/webm' });
+                    recorder.onstop = () => {
+                        const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
                         this.recordedBlobs[recordedIndex] = blob; // Use captured index instead of this.questionIndex
 
                         // Trigger Review UI in Practice Mode
                         if (this.mode === 'practice') {
                             this.showReviewUI(blob);
+                        } else if (!document.getElementById('view-finished').classList.contains('hidden')) {
+                            // The final recording becomes available after the finished view is first rendered.
+                            this.populateFinishedRecordings();
                         }
                     };
 
-                    this.mediaRecorder.start();
+                    recorder.start();
                     this.isRecording = true;
                     console.log("Started recording answer " + (recordedIndex + 1));
                 } catch (e) {
