@@ -497,6 +497,14 @@
 
             // Ask for local recording permissions safely
             requestMicPermission: async function() {
+                const activeAudioTracks = this.mediaStream
+                    ? this.mediaStream.getAudioTracks().filter(track => track.readyState === 'live')
+                    : [];
+
+                if (activeAudioTracks.length > 0) {
+                    return true;
+                }
+
                 try {
                     this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     return true;
